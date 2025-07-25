@@ -169,7 +169,7 @@ resource "aws_instance" "vod_backend" {
 
 ## 📑 GitFlow (Mermaid)
 
-```mermaid
+```
 gitGraph
    commit id: "Inicio"
    branch develop
@@ -192,7 +192,7 @@ gitGraph
 
 ---
 
-##📊 Herramientas Utilizadas
+## 📊 Herramientas Utilizadas
 
 - Terraform  
 - GitHub Actions
