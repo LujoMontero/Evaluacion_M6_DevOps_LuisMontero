@@ -121,3 +121,46 @@ jobs:
             npm install
             pm2 restart app.js
 ```
+## 📁 Infraestructura como Código (Terraform)
+
+Ejemplo de recurso en Terraform para una instancia EC2:
+
+```hcl
+resource "aws_instance" "vod_backend" {
+  ami                    = "ami-0c55b159cbfafe1f0"
+  instance_type          = "t3.micro"
+  subnet_id              = aws_subnet.public_subnet.id
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              docker run -d -p 80:80 nginx
+              EOF
+}
+
+```
+## 📊 Monitoreo
+
+- **AWS CloudWatch**: Para monitoreo de logs, métricas y alertas.
+- **Amazon SNS**: Para envío de notificaciones automáticas ante eventos críticos.
+
+---
+
+## 🕓 Antes y Después del Ejercicio
+
+### ❌ Antes:
+
+- Servidores VPS inseguros  
+- Deploy manual (por FTP)  
+- Sin pipelines  
+- Sin monitoreo  
+- Sin control de versiones  
+
+### ✅ Después:
+
+- Infraestructura AWS bien estructurada (VPC, S3, RDS, ECS)  
+- CI/CD con GitHub Actions  
+- Terraform usado como Infraestructura como Código (IaC)  
+- Flujo de trabajo GitFlow aplicado  
+
