@@ -19,8 +19,11 @@ Diseñar una infraestructura cloud moderna para la plataforma VOD, justificando 
 
 ---
 
-## 1. Diseño de la Infraestructura en la Nube (1.5 pt)
+## 1. Diseño de la Infraestructura en la Nube
 
+<img width="1536" height="1024" alt="diagrma de flujo" src="https://github.com/user-attachments/assets/9fa10dba-5f7b-44f5-8dea-6a7f21013524" />
+
+---
 ### ✈ Modelo de implementación
 
 - Tipo: **Nube pública (AWS)**
@@ -164,3 +167,36 @@ resource "aws_instance" "vod_backend" {
 - Terraform usado como Infraestructura como Código (IaC)  
 - Flujo de trabajo GitFlow aplicado  
 
+## 📑 GitFlow (Mermaid)
+
+```mermaid
+gitGraph
+   commit id: "Inicio"
+   branch develop
+   checkout develop
+   commit id: "Desarrollo inicial"
+   branch feature/perfil
+   checkout feature/perfil
+   commit id: "Agrega perfiles"
+   checkout develop
+   merge feature/perfil
+   branch release/v1.0
+   commit id: "QA"
+   checkout main
+   merge release/v1.0 tag: "v1.0"
+   branch hotfix/login
+   commit id: "Fix login"
+   merge hotfix/login
+```
+<img width="3840" height="3160" alt="Untitled diagram _ Mermaid Chart-2025-07-25-023258" src="https://github.com/user-attachments/assets/1b9494d1-fe85-4694-b037-5ff106326a2c" />
+
+---
+
+##📊 Herramientas Utilizadas
+
+- Terraform  
+- GitHub Actions
+- AWS (EC2, S3, ECS, RDS, CloudWatch, IAM)
+- Draw.io (para el diagrama)
+- Mermaid (para visualizar el flujo GitFlow)
+- Node.js + PM2 (para ejecución del backend)
