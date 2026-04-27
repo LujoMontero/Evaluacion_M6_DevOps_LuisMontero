@@ -1,102 +1,103 @@
-# Evaluación Módulo 6: Diseño de Infraestructura Cloud y DevOps para una Plataforma de Video Bajo Demanda
+<div align="center">
 
-## 🌟 Contexto
+# ☁️ Plataforma VOD — Diseño de Infraestructura Cloud
 
-Una empresa de tecnología desea crear una plataforma de video bajo demanda (VOD), similar a Netflix.  
-Los usuarios podrán registrarse, seleccionar contenido y hacer streaming desde diversos dispositivos.  
-Se requiere una infraestructura cloud escalable, segura y eficiente, capaz de atender a miles de usuarios simultáneos.
+### AWS · Terraform · Docker · ECS · GitHub Actions · GitFlow
 
----
+![AWS](https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazonaws&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=githubactions&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
 
-## ✅ Objetivo del Informe
-
-Diseñar una infraestructura cloud moderna para la plataforma VOD, justificando cada elección respecto a:
-
-- Servicios de almacenamiento.
-- Cómputo y escalabilidad.
-- Redes y seguridad.
-- CI/CD e infraestructura como código.
+</div>
 
 ---
 
-## 1. Diseño de la Infraestructura en la Nube
+## 📌 Descripción del proyecto
 
-<img width="1536" height="1024" alt="diagrma de flujo" src="https://github.com/user-attachments/assets/9fa10dba-5f7b-44f5-8dea-6a7f21013524" />
-
----
-### ✈ Modelo de implementación
-
-- Tipo: **Nube pública (AWS)**
-- Justificación:
-  - Alta disponibilidad global.
-  - Red de entrega de contenido (CDN).
-  - Reducción de costos en mantenimiento y hardware.
-
-### 🚀 Modelo de servicio
-
-- Modelo híbrido:
-  - **IaaS**: EC2 y redes
-  - **PaaS**: RDS
-  - **FaaS**: Lambda para tareas programadas o lógica liviana
-
-### 📂 Almacenamiento
-
-- S3: contenido multimedia estático (videos)
-- Glacier: backups y almacenamiento a largo plazo
-- RDS PostgreSQL: base de datos relacional (usuarios, reproducciones, catálogo)
+Diseño de infraestructura cloud escalable para una **plataforma de Video Bajo Demanda (VOD)**, similar a Netflix. El proyecto define arquitectura AWS completa, pipeline CI/CD, estrategia de GitFlow e Infraestructura como Código con Terraform, capaz de soportar miles de usuarios simultáneos.
 
 ---
 
-## 2. Arquitectura de Cómputo y Escalabilidad (1.5 pt)
+## 🏗️ Arquitectura Cloud (AWS)
 
-### ⚖️ Elección de servicios
+```
+                    ┌──────────────┐
+   Usuarios ──────▶ │  CloudFront  │ ◀── S3 (videos + frontend estático)
+                    └──────┬───────┘
+                           │
+                    ┌──────▼───────┐
+                    │     ALB      │  ← Application Load Balancer
+                    └──────┬───────┘
+                           │
+              ┌────────────▼────────────┐
+              │      ECS + Fargate      │  ← Backend en contenedores
+              │    (Auto Scaling)       │
+              └────────────┬────────────┘
+                           │
+                    ┌──────▼───────┐
+                    │  RDS (PostgreSQL) │  ← Subred privada
+                    └──────────────┘
+```
 
-- ECS con Fargate: backend en contenedores autogestionados
-- S3 + CloudFront: frontend estático distribuido globalmente
+### Servicios utilizados
 
-### 🚧 Escalabilidad
-
-- Auto Scaling Groups (EC2 o ECS)
-- Application Load Balancer (ALB)
-
-### 🌐 Orquestador
-
-- Amazon ECS (alternativa: EKS - Kubernetes)
-
----
-
-## 3. Redes y Seguridad en la Nube (1.5 pt)
-
-### 🛫 Red (VPC)
-
-- Subredes separadas:
-  - Pública (frontend, balanceador)
-  - Privada (RDS, ECS)
-- Tablas de ruteo y Gateway NAT
-
-### 🚦 Seguridad
-
-- IAM Roles y Policies
-- Security Groups y NACLs
-- Secrets Manager
-- VPN e IPSec
-
-### 🌎 CDN
-
-- Amazon CloudFront
+| Capa | Servicio AWS | Propósito |
+|---|---|---|
+| Frontend | S3 + CloudFront | Distribución global de contenido estático |
+| Cómputo | ECS + Fargate | Contenedores autogestionados y escalables |
+| Base de datos | RDS PostgreSQL | Usuarios, catálogo y reproducciones |
+| Almacenamiento | S3 + Glacier | Videos y backups a largo plazo |
+| Balanceo | ALB | Distribución de tráfico |
+| Seguridad | IAM + Secrets Manager + VPC | Roles, secretos y red privada |
+| Monitoreo | CloudWatch + SNS | Métricas, logs y alertas |
 
 ---
 
-## 4. Automatización e Integración Continua (1.5 pt)
+## 🔒 Red y seguridad (VPC)
 
-### ⚒️ CI/CD Pipeline (GitHub Actions)
+```
+VPC
+├── Subred pública   → Frontend, ALB, NAT Gateway
+└── Subred privada   → ECS backend, RDS PostgreSQL
+```
+
+- **IAM Roles y Policies**: permisos mínimos por servicio
+- **Security Groups + NACLs**: control granular de tráfico
+- **Secrets Manager**: credenciales de BD y APIs sin hardcoding
+- **VPN / IPSec**: acceso seguro a recursos internos
+
+---
+
+## ⚙️ Infraestructura como Código — Terraform
+
+```hcl
+resource "aws_instance" "vod_backend" {
+  ami                    = "ami-0c55b159cbfafe1f0"
+  instance_type          = "t3.micro"
+  subnet_id              = aws_subnet.public_subnet.id
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+
+  user_data = <<-EOF
+              #!/bin/bash
+              yum update -y
+              docker run -d -p 80:80 nginx
+              EOF
+}
+```
+
+---
+
+## 🔁 Pipeline CI/CD — GitHub Actions
 
 ```yaml
-name: CI/CD - Plataforma VOD
+name: CI/CD — Plataforma VOD
 
 on:
   push:
-    branches: [ "main", "release/**" ]
+    branches: [main, "release/**"]
 
 jobs:
   build:
@@ -106,8 +107,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - run: npm install
-      - run: npm test
+      - run: npm install && npm test
 
   deploy:
     needs: build
@@ -124,79 +124,57 @@ jobs:
             npm install
             pm2 restart app.js
 ```
-## 📁 Infraestructura como Código (Terraform)
-
-Ejemplo de recurso en Terraform para una instancia EC2:
-
-```hcl
-resource "aws_instance" "vod_backend" {
-  ami                    = "ami-0c55b159cbfafe1f0"
-  instance_type          = "t3.micro"
-  subnet_id              = aws_subnet.public_subnet.id
-  vpc_security_group_ids = [aws_security_group.web_sg.id]
-
-  user_data = <<-EOF
-              #!/bin/bash
-              yum update -y
-              docker run -d -p 80:80 nginx
-              EOF
-}
-
-```
-## 📊 Monitoreo
-
-- **AWS CloudWatch**: Para monitoreo de logs, métricas y alertas.
-- **Amazon SNS**: Para envío de notificaciones automáticas ante eventos críticos.
 
 ---
 
-## 🕓 Antes y Después del Ejercicio
-
-### ❌ Antes:
-
-- Servidores VPS inseguros  
-- Deploy manual (por FTP)  
-- Sin pipelines  
-- Sin monitoreo  
-- Sin control de versiones  
-
-### ✅ Después:
-
-- Infraestructura AWS bien estructurada (VPC, S3, RDS, ECS)  
-- CI/CD con GitHub Actions  
-- Terraform usado como Infraestructura como Código (IaC)  
-- Flujo de trabajo GitFlow aplicado  
-
-## 📑 GitFlow (Mermaid)
+## 🌿 Estrategia GitFlow
 
 ```
-gitGraph
-   commit id: "Inicio"
-   branch develop
-   checkout develop
-   commit id: "Desarrollo inicial"
-   branch feature/perfil
-   checkout feature/perfil
-   commit id: "Agrega perfiles"
-   checkout develop
-   merge feature/perfil
-   branch release/v1.0
-   commit id: "QA"
-   checkout main
-   merge release/v1.0 tag: "v1.0"
-   branch hotfix/login
-   commit id: "Fix login"
-   merge hotfix/login
+main ◀────────────── release/v1.0 ◀── QA ──── develop ◀── feature/perfil
+  ▲                                                  ▲
+  └──── hotfix/login (fix urgente)                   └── feature/streaming
 ```
-<img width="3840" height="3160" alt="Untitled diagram _ Mermaid Chart-2025-07-25-023258" src="https://github.com/user-attachments/assets/1b9494d1-fe85-4694-b037-5ff106326a2c" />
+
+- `main`: producción estable con tags de versión
+- `develop`: integración continua de features
+- `feature/*`: desarrollo aislado por funcionalidad
+- `release/*`: estabilización antes de producción
+- `hotfix/*`: correcciones urgentes en producción
 
 ---
 
-## 📊 Herramientas Utilizadas
+## 📊 Monitoreo y alertas
 
-- Terraform  
-- GitHub Actions
-- AWS (EC2, S3, ECS, RDS, CloudWatch, IAM)
-- Draw.io (para el diagrama)
-- Mermaid (para visualizar el flujo GitFlow)
-- Node.js + PM2 (para ejecución del backend)
+| Herramienta | Función |
+|---|---|
+| CloudWatch | Métricas de CPU, memoria, latencia y errores HTTP |
+| SNS | Notificaciones automáticas ante eventos críticos |
+| ELK (alternativa) | Centralización y búsqueda de logs |
+
+**Alertas configuradas:** caída de pods, errores 5xx, CPU > 80%, latencia > 1s
+
+---
+
+## 📊 Comparativa: Antes vs Después
+
+| Aspecto | Antes | Después |
+|---|---|---|
+| Infraestructura | VPS inseguros sin gestión | AWS con VPC, IAM y Secrets Manager |
+| Deploy | Manual por FTP | CI/CD automático con GitHub Actions |
+| Escalabilidad | Manual y tardía | Auto Scaling Groups en ECS |
+| Monitoreo | Sin métricas | CloudWatch + alertas SNS |
+| Control de versiones | Sin repositorio | GitFlow en GitHub |
+| IaC | Configuración manual | Terraform reproducible |
+
+---
+
+## 📄 Documentación completa
+
+Disponible en: [`ArquitecturaCloud_M6_DevOps_LuisMontero.pdf`](./ArquitecturaCloud_M6_DevOps_LuisMontero.pdf)
+
+---
+
+## 👨‍💻 Autor
+
+**Luis Montero** · Especialización DevOps · Julio 2025  
+[GitHub](https://github.com/LujoMontero) · [LinkedIn](https://www.linkedin.com/in/luis-montero-if/)
